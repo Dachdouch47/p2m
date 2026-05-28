@@ -1,38 +1,99 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+import os
+from typing import Tuple, Union
 
-def preprocess_data(df):
-    """Preprocess network log data for ML model"""
-    df = df.copy()
+class DataPreprocessor:
+    """
+    Applique le MÊME preprocessing que lors de l'entraînement
+    ⚠️ CRITICAL: Preprocessing identique = prédictions cohérentes
+    """
     
-    # Drop rows with missing values
-    df = df.dropna()
+    # Colonnes à supprimer (comme dans entraînement)
+    COLUMNS_TO_DROP = [
+        'Label',           # Colonne cible
+        'FlowID',          # Identifiants
+        'SourceIP',        # Trop spécifiques
+        'DestinationIP',
+        'Timestamp',
+        'Source_IP',
+        'Dest_IP',
+        'SrcIP',
+        'DstIP'
+    ]
     
-    # Identify label column (common names)
-    label_col = None
-    for col in ['Label', 'label', 'class', 'Class', 'Attack', 'attack']:
-        if col in df.columns:
-            label_col = col
-            break
+    @staticmethod
+    def clean_data(df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Nettoyage données - IDENTICAL à entraînement
+        """
+        df_clean = df.copy()
+        
+        print(f"📊 Avant: {df_clean.shape}")
+        
+        # 1. Suppression colonnes
+        cols_to_drop = [col for col in DataPreprocessor.COLUMNS_TO_DROP 
+                       if col in df_clean.columns]
+        if cols_to_drop:
+            df_clean = df_clean.drop(columns=cols_to_drop, errors='ignore')
+            print(f"   ✅ {len(cols_to_drop)} colonnes supprimées")
+        
+        # 2. Suppression NaN
+        initial_rows = len(df_clean)
+        df_clean = df_clean.dropna()
+        print(f"   ✅ {initial_rows - len(df_clean)} NaN supprimés")
+        
+        # 3. Suppression doublons
+        initial_rows = len(df_clean)
+        df_clean = df_clean.drop_duplicates()
+        print(f"   ✅ {initial_rows - len(df_clean)} doublons supprimés")
+        
+        # 4. String → Numeric
+        for col in df_clean.columns:
+            if df_clean[col].dtype == 'object':
+                try:
+                    df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
+                except:
+                    pass
+        
+        # 5. Remplissage NaN
+        df_clean = df_clean.fillna(0)
+        
+        # 6. Suppression infinites
+        df_clean = df_clean.replace([np.inf, -np.inf], 0)
+        
+        print(f"📊 Après: {df_clean.shape}\n")
+        return df_clean
+
+
+def preprocess_prediction(df: pd.DataFrame) -> np.ndarray:
+    """
+    Préprocesse données pour PRÉDICTION (sans Label)
     
-    if label_col is None:
-        raise ValueError("No label column found in dataset")
+    Utilisé pour:
+    - capture_network()
+    - upload_analyze()
+    """
+    df_clean = DataPreprocessor.clean_data(df)
+    X = df_clean.values
+    return X
+
+
+def load_dataset(file_path):
+    """Charge dataset depuis CSV ou Parquet"""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
     
-    y = (df[label_col] != 'BENIGN').astype(int).values
-    
-    # Drop non-numeric columns
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    
-    if label_col in numeric_cols:
-        numeric_cols.remove(label_col)
-    
-    X = df[numeric_cols].fillna(0).values
-    
-    return X, y
+    if file_path.endswith('.parquet'):
+        return pd.read_parquet(file_path)
+    elif file_path.endswith('.csv'):
+        return pd.read_csv(file_path)
+    else:
+        raise ValueError("Format non supporté. Utilisez CSV ou Parquet.")
+
 
 def normalize_features(X):
-    """Normalize feature scaling"""
-    from sklearn.preprocessing import StandardScaler
+    """Normalise les features"""
     scaler = StandardScaler()
     return scaler.fit_transform(X)

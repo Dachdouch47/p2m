@@ -1,85 +1,194 @@
-# Cybersecurity Intrusion Detection System
+# 🛡️ Cybersecurity Intrusion Detection System (IDS)
 
-This project is a full-stack web application designed to detect malicious activities in network logs using machine learning techniques. It allows users to upload network log datasets, analyze them, and view the results of the analysis.
+Application web full-stack pour détecter les menaces dans les logs réseau en temps réel avec Machine Learning.
 
-## Project Structure
+## 📋 Qu'est-ce que c'est?
 
-```
-cybersecurity-ids
-├── frontend          # Frontend application built with React
-│   ├── src
-│   │   ├── components # Reusable components for the UI
-│   │   ├── pages      # Different pages of the application
-│   │   ├── services    # API service for backend communication
-│   │   ├── types       # TypeScript types and interfaces
-│   │   └── App.tsx     # Main entry point for the frontend
-│   ├── package.json    # Frontend dependencies and scripts
-│   └── tsconfig.json   # TypeScript configuration for the frontend
-├── backend           # Backend application built with FastAPI (or Flask)
-│   ├── src
-│   │   ├── api        # API routes for handling requests
-│   │   ├── ml         # Machine learning models and utilities
-│   │   ├── database    # Database connection and schema
-│   │   ├── services    # Services for log parsing and analysis
-│   │   ├── types       # TypeScript types and interfaces for the backend
-│   │   └── app.ts      # Main entry point for the backend
-│   ├── package.json    # Backend dependencies and scripts
-│   ├── tsconfig.json   # TypeScript configuration for the backend
-│   └── requirements.txt # Python dependencies for the backend
-├── README.md          # Project documentation
-└── .gitignore         # Files to ignore in version control
+Système de détection d'intrusions (IDS) qui:
+- ✅ **Capture le trafic réseau** en temps réel
+- ✅ **Détecte les menaces** avec Machine Learning
+- ✅ **Affiche les résultats** instantanément
+- ✅ **Visualise les menaces** sur une carte interactive
+- ✅ **Gère l'authentification** utilisateur
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+- **Python 3.8+**
+- **Node.js 16+** et npm
+
+### 1️⃣ Cloner et préparer
+
+```bash
+git clone https://github.com/your-username/cybersecurity-ids.git
+cd cybersecurity-ids
 ```
 
-## Installation & Setup
+### 2️⃣ Configuration Backend
 
-### Prerequisites
-- Python 3.8+ (for backend)
-- Node.js 14+ and npm (for frontend)
+```bash
+cd cybersecurity-ids/backend
 
-### Backend Setup
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Create and activate a Python virtual environment (recommended):
-   ```bash
-   python -m venv venv
-   # On Windows:
-   venv\Scripts\activate
-   # On macOS/Linux:
-   source venv/bin/activate
-   ```
-3. Install Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run the FastAPI server:
-   ```bash
-   uvicorn src.app:app --reload
-   ```
-   The backend API will be available at `http://localhost:8000`
+# Créer environnement virtuel
+python -m venv venv
 
-### Frontend Setup
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install npm dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the React development server:
-   ```bash
-   npm start
-   ```
-   The frontend will be available at `http://localhost:3000`
+# Activer sur Windows:
+venv\Scripts\activate
 
-### Running Both Services
-For full functionality, you need both the backend and frontend running simultaneously:
-- **Backend API:** `http://localhost:8000`
-- **Frontend Application:** `http://localhost:3000`
+# Activer sur macOS/Linux:
+source venv/bin/activate
 
-## Dependencies
+# Installer dépendances
+pip install -r requirements.txt
+```
+
+### 3️⃣ Configuration Frontend
+
+```bash
+cd ../frontend
+npm install
+```
+
+## ⚡ Démarrer l'application
+
+### Terminal 1 - Backend
+```bash
+cd cybersecurity-ids/backend
+venv\Scripts\activate  # Windows
+uvicorn src.app:app --reload
+```
+✅ Backend sur: **http://localhost:8000**
+
+### Terminal 2 - Frontend
+```bash
+cd cybersecurity-ids/frontend
+npm start
+```
+✅ Frontend sur: **http://localhost:3000**
+
+## ⚙️ Configuration de l'interface réseau
+
+Le backend capture le trafic réseau en temps réel. Par défaut, il utilise une interface réseau spécifique.
+
+### Trouver votre interface réseau
+
+**Sur Windows:**
+```bash
+ipconfig /all
+```
+Cherchez le nom complet du dispositif réseau (exemple: `\Device\NPF_{XXXX-XXXX-XXXX-XXXX}`)
+
+**Sur macOS/Linux:**
+```bash
+ifconfig
+# ou
+ip link show
+```
+
+### Modifier l'interface réseau
+
+L'interface réseau se trouve dans **2 fichiers** à modifier:
+
+#### 1️⃣ Dans [cybersecurity-ids/backend/src/app.py](cybersecurity-ids/backend/src/app.py#L48)
+```python
+args=(r"\Device\NPF_{11FB0AD5-67ED-4990-B1B8-0C7585A5E6BC}",)
+```
+
+#### 2️⃣ Dans [cybersecurity-ids/backend/src/api/routes/realtime.py](cybersecurity-ids/backend/src/api/routes/realtime.py#L226)
+```python
+def start_realtime_capture(interface=r"\Device\NPF_{11FB0AD5-67ED-4990-B1B8-0C7585A5E6BC}"):
+```
+
+### Remplacer par votre interface
+
+Dans **les 2 fichiers**, remplacez:
+```
+\Device\NPF_{11FB0AD5-67ED-4990-B1B8-0C7585A5E6BC}
+```
+
+Par votre propre interface. Exemple:
+```
+\Device\NPF_{VOTRE-INTERFACE-RESEAU}
+```
+
+### Alternative : Désactiver la capture réseau
+
+Si l'interface ne fonctionne pas, vous pouvez la désactiver temporairement en commentant dans `app.py`:
+
+```python
+# thread.start()  # Désactiver si l'interface ne fonctionne pas
+```
+
+## 📁 Structure
+
+```
+cybersecurity-ids/
+├── backend/                    # API FastAPI + ML
+│   ├── src/
+│   │   ├── api/routes/
+│   │   │   ├── realtime.py     # Détection temps réel
+│   │   │   ├── monitoring.py   # Monitoring & Threat Map
+│   │   │   ├── auth.py         # Authentification
+│   │   ├── ml/models/          # Modèles ML
+│   │   └── app.py              # App principale
+│   └── requirements.txt
+├── frontend/                   # React + TypeScript
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Monitoring.tsx  # Real-time Detection
+│   │   │   ├── ThreatMap.tsx   # Carte des menaces
+│   │   │   └── ...
+│   │   ├── components/         # Composants
+│   │   └── App.tsx
+│   └── package.json
+└── README.md
+```
+
+## 🎯 Fonctionnalités principales
+
+### 1. Real-time Detection (Détection temps réel)
+- Capture le trafic réseau en direct
+- Analyse avec machine learning
+- Résultats instantanés
+- Page: **http://localhost:3000/monitoring**
+
+### 2. Threat Map (Carte des menaces)
+- Visualisation géographique des menaces
+- Localisation des adresses IP
+- Interaction interactive
+- Page: **http://localhost:3000/threats**
+
+## 📚 Accès
+
+- **Frontend:** http://localhost:3000
+- **API Docs:** http://localhost:8000/docs
+
+## 🔧 Dépannage
+
+**Backend ne démarre pas?**
+```bash
+# Vérifier port 8000
+netstat -ano | findstr :8000
+# Démarrer sur port différent
+uvicorn src.app:app --reload --port 8001
+```
+
+**Frontend ne démarre pas?**
+```bash
+# Réinstaller dépendances
+rm -r node_modules
+npm install
+npm start
+```
+
+**La capture réseau ne fonctionne pas?**
+- Vérifiez que vous avez modifié l'interface réseau dans `app.py` et `realtime.py`
+- Utilisez `ipconfig /all` pour obtenir votre interface
+- Sinon, commentez `thread.start()` dans `app.py`
+
+## 📝 Licence
+
+MIT License
 
 ### Backend (Python)
 See [requirements.txt](backend/requirements.txt) for complete list:

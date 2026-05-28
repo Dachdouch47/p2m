@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "target": "es5",
     "lib": [
       "dom",
@@ -8,6 +9,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
+    "types": [],
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,

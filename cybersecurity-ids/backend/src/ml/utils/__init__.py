@@ -1,3 +1,3 @@
-from .preprocessing import preprocess_data, normalize_features
+from .preprocessing import preprocess_prediction, normalize_features
 
-__all__ = ["preprocess_data", "normalize_features"]
+__all__ = ["preprocess_prediction", "normalize_features"]

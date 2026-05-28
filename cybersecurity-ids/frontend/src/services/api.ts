@@ -67,12 +67,34 @@ export const listDatasets = async () => {
 };
 
 export const trainModel = async (filePath: string): Promise<TrainResponse> => {
-    const response = await axios.post(`${API_URL}/analyze/train`, { file_path: filePath });
-    return response.data;
+    // ⚠️ DÉPRÉCIÉ: Modèle déjà pré-entraîné dans detector_model.pkl
+    // On utilise directement /upload-analyze pour prédictions
+    throw new Error("Training is disabled. Model is pre-trained. Use uploadAndAnalyze() instead.");
 };
 
 export const predictOnDataset = async (filePath: string): Promise<PredictResponse> => {
-    const response = await axios.post(`${API_URL}/analyze/predict`, { file_path: filePath });
+    // ⚠️ DÉPRÉCIÉ: Utilisez uploadAndAnalyze() à la place
+    throw new Error("Direct predict is disabled. Use uploadAndAnalyze() instead.");
+};
+
+export const uploadAndAnalyze = async (file: File): Promise<any> => {
+    /**
+     * 🎯 ENDPOINT RECOMMANDÉ: Upload + Prédictions automatiques
+     * 
+     * Le modèle pré-entraîné (detector_model.pkl) fait:
+     * 1. Preprocessing des données (identique entraînement)
+     * 2. Prédictions RandomForest
+     * 3. Calcul des statistiques
+     */
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await axios.post(`${API_URL}/analyze/upload-analyze`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
     return response.data;
 };
 
