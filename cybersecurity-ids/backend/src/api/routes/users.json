@@ -1,12 +1,7 @@
 {
     "dhia": {
         "username": "dhia",
-        "hashed_password": "$2b$12$XBl/YqqUHex8CARRIosgjO4wlIaD7NXeUKWTStm9hGlq6EAUDZ4wW",
-        "is_admin": true
-    },
-    "hama": {
-        "username": "hama",
-        "hashed_password": "$2b$12$P/IIQg9XEfs3CB5JxmCO6eoYJoujp59M9YqszppcWCd2zjq0uqG76",
+        "hashed_password": "$2b$12$MWmntdlzg5Nwhi5lQXm.CuY47682zbCACnf0uPTsaoh1RweSkQ4wC",
         "is_admin": false
     }
 }
