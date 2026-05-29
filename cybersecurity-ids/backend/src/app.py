@@ -45,9 +45,9 @@ async def startup_event():
     set_loop(loop)
     # Démarrer la capture en temps réel dans un thread séparé (daemon)
     # Remplacez "Ethernet" par le nom de votre interface réseau (voir ipconfig)
-    thread = threading.Thread(target=start_realtime_capture, args=(r"\Device\NPF_{11FB0AD5-67ED-4990-B1B8-0C7585A5E6BC}",), daemon=True)
+    thread = threading.Thread(target=start_realtime_capture, args=(r"\Device\NPF_{B8FD596D-A594-47E6-A1CB-40E8F3ADE92F}",), daemon=True)
     thread.start()
-    print("✅ Capture réseau temps réel démarrée sur l'interface 'Wi-Fi'")
+    print("✅ Capture réseau temps réel démarrée sur l'interface 'Ethernet 2'")
 
 
 if __name__ == "__main__":

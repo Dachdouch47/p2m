@@ -69,7 +69,7 @@ const Monitoring: React.FC = () => {
     ws.onmessage = (event) => {
       try {
         const newEvent: NetworkEvent = JSON.parse(event.data);
-        setEvents(prev => [newEvent, ...prev.slice(0, 99)]);
+        setEvents(prev => [newEvent, ...prev.slice(0, 299)]);
         if (newEvent.verdict === 'Attack') {
           // Accès dynamique avec 'as any'
           const globalWindow = window as any;
@@ -98,7 +98,7 @@ const Monitoring: React.FC = () => {
 
   // Optionnel : charger quelques événements historiques via REST au démarrage
   useEffect(() => {
-    fetch('http://localhost:8000/api/monitoring/events?limit=100')
+    fetch('http://localhost:8000/api/monitoring/events?limit=1000')
       .then(res => res.json())
       .then(data => {
         if (data.events && Array.isArray(data.events)) {
@@ -109,9 +109,10 @@ const Monitoring: React.FC = () => {
   }, []);
 
   // Filtrage des événements
-  const filteredEvents = filter === 'attacks'
+  const filteredEvents = (filter === 'attacks'
     ? events.filter(e => e.verdict === 'Attack')
-    : events;
+    : [...events]
+  ).reverse();
 
   // Statistiques
   const stats = {

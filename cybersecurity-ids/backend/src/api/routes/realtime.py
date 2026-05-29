@@ -2,11 +2,13 @@
 import asyncio
 import threading
 import joblib
-import pandas as pd
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from nfstream import NFStreamer
 import numpy as np
+import pandas as pd 
 from datetime import datetime
+from collections import defaultdict
+import time
 
 router = APIRouter(tags=["realtime"])
 
@@ -30,8 +32,11 @@ print("Classe bénigne utilisée :", benign_class)
 # 2. Stockage partagé avec monitoring.py
 # ------------------------------
 shared_events = []          # liste des événements (du plus récent au plus ancien)
-MAX_HISTORY = 1000
+MAX_HISTORY = 10000
+scan_tracker = defaultdict(list)
 
+SCAN_THRESHOLD = 15
+SCAN_WINDOW = 10
 # ------------------------------
 # 3. Gestionnaire WebSocket
 # ------------------------------
@@ -179,18 +184,66 @@ def set_loop(l):
     global loop
     loop = l
 
-def start_realtime_capture(interface=r"\Device\NPF_{11FB0AD5-67ED-4990-B1B8-0C7585A5E6BC}"):
+def start_realtime_capture(interface=r"\Device\NPF_{B8FD596D-A594-47E6-A1CB-40E8F3ADE92F}"):
     """Capture les flux, prédit et diffuse via WebSocket + stockage."""
     global shared_events
     streamer = NFStreamer(source=interface,
                           decode_tunnels=True,
-                          statistical_analysis=True,
-                          idle_timeout=30,
-                          active_timeout=30)
+                          statistical_analysis=False,
+                          idle_timeout=15,
+                          active_timeout=60)
     for flow in streamer:
+        current_time = time.time()
+
+        scan_tracker[flow.src_ip].append(
+            (flow.dst_port, current_time)
+        )
+
+        # garder seulement les ports récents
+        scan_tracker[flow.src_ip] = [
+            (p, t)
+            for p, t in scan_tracker[flow.src_ip]
+            if current_time - t < SCAN_WINDOW
+        ]
+
+        unique_ports = len(set(
+            p for p, _ in scan_tracker[flow.src_ip]
+        ))
+
+        # détection scan
+        if unique_ports >= SCAN_THRESHOLD:
+
+            event = {
+                "timestamp": datetime.now().isoformat(),
+                "src_ip": flow.src_ip,
+                "dst_ip": flow.dst_ip,
+                "protocol": str(flow.protocol),
+                "port": flow.dst_port,
+                "bytes_sent": getattr(flow, 'src2dst_bytes', 0),
+                "bytes_received": getattr(flow, 'dst2src_bytes', 0),
+                "verdict": "Attack",
+                "confidence": 0.99,
+                "attack_type": "Port Scan"
+            }
+
+            shared_events.append(event)
+
+            if len(shared_events) > MAX_HISTORY:
+                shared_events.pop()
+
+            asyncio.run_coroutine_threadsafe(
+                manager.broadcast(event),
+                loop
+            )
+
+            continue
         features_dict = flow_to_features(flow)
-        df = pd.DataFrame([features_dict])[REQUIRED_FEATURES]
-        proba = model.predict_proba(df)[0]
+        X = pd.DataFrame(
+            [[features_dict.get(f, 0) for f in REQUIRED_FEATURES]],
+            columns=REQUIRED_FEATURES
+        )
+
+        proba = model.predict_proba(X)[0]
         pred_class = model.classes_[np.argmax(proba)]
         confidence = float(np.max(proba))
         is_attack = pred_class != benign_class          # ← correction ici
@@ -201,14 +254,14 @@ def start_realtime_capture(interface=r"\Device\NPF_{11FB0AD5-67ED-4990-B1B8-0C75
             "src_ip": flow.src_ip,
             "dst_ip": flow.dst_ip,
             "protocol": str(flow.protocol),
-            "port": flow.src_port if flow.src_port else flow.dst_port,
+            "port": flow.dst_port,
             "bytes_sent": getattr(flow, 'src2dst_bytes', 0),
             "bytes_received": getattr(flow, 'dst2src_bytes', 0),
             "verdict": verdict,
             "confidence": confidence,
             "attack_type": attack_type
         }
-        shared_events.insert(0, event)
+        shared_events.append(event)
         if len(shared_events) > MAX_HISTORY:
             shared_events.pop()
         asyncio.run_coroutine_threadsafe(manager.broadcast(event), loop)

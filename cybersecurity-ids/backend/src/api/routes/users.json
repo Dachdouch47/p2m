@@ -3,5 +3,10 @@
         "username": "dhia",
         "hashed_password": "$2b$12$MWmntdlzg5Nwhi5lQXm.CuY47682zbCACnf0uPTsaoh1RweSkQ4wC",
         "is_admin": false
+    },
+    "cha": {
+        "username": "cha",
+        "hashed_password": "$2b$12$RROdlAfMTrLhsr7qZZRsxO4kCTif5x/GZgWk.8AVqA3LPSEV.RPYC",
+        "is_admin": false
     }
 }

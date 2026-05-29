@@ -17,7 +17,7 @@ class ExportRequest(BaseModel):
 # 1. Événements réseau (utilisé par Monitoring pour l'historique initial)
 # =========================================================================
 @router.get("/monitoring/events")
-async def get_network_events(limit: int = 100, offset: int = 0):
+async def get_network_events(limit: int = 1000, offset: int = 0):
     from src.api.routes.realtime import shared_events
     events_slice = shared_events[offset:offset+limit]
     return {"events": events_slice, "total": len(shared_events)}
